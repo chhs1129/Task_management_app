@@ -1,0 +1,43 @@
+<?xml version="1.0"?> 
+<odoo>
+	<!-- Task Management App Menu -->
+	<menuitem id="task_system_menu" 
+					  name="Task Management System" />  
+    <!-- Action to open the Task list --> 
+	<record id="action_submenu_task" model="ir.actions.act_window">
+		<field name="name">List of Tasks</field>
+		<field name="res_model">task_management_task</field>
+		<field name="view_mode">tree,form</field>
+	</record>						
+	
+	<!-- Menu item to open the Task list --> 
+	<menuitem id="submenu_task"
+              name="All Tasks"
+              action="action_submenu_task"
+              parent="task_system_menu" />
+			  
+	<!-- Action to open the Category list --> 
+	<record id="action_submenu_category" model="ir.actions.act_window">
+		<field name="name">List of Categories</field>
+		<field name="res_model">task_management_category</field>
+		<field name="view_mode">tree,form</field>
+	</record>
+
+	<!-- Menu item to open the Category list --> 
+	<menuitem id="submenu_category"
+              name="All Categories"
+              action="action_submenu_category"
+              parent="task_system_menu" 
+    /> 	
+			  
+	<!-- Server action -->
+    <record id="action_approve_multiple_task" model="ir.actions.server">
+        <field name="name">Approve</field>
+        <field name="model_id" ref="model_task_management_task"/>
+        <field name="binding_model_id" ref="model_task_management_task"/>
+        <field name="state">code</field>
+		<field name="groups" eval="[(4, ref('task_group_manager'))]"/>
+        <field name="code">action = records.action_approve()</field>
+    </record>
+	
+</odoo>

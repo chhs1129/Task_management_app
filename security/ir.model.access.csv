@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_task_user,taskUser,model_task_management_task,task_group_user,1,1,0,0
+access_task_manager,taskManager,model_task_management_task,task_group_manager,1,1,1,1
+access_category_user,categoryUser,model_task_management_category,task_group_user,1,0,0,0
+access_category_manager,categoryManager,model_task_management_category,task_group_manager,1,1,1,1
+

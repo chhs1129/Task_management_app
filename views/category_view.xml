@@ -1,0 +1,36 @@
+<?xml version="1.0"?> 
+<odoo>
+	<!-- List of all categories-->
+	<record id="task_category_view_tree" model="ir.ui.view">
+        <field name="name">task_category.view_tree</field>
+        <field name="model">task_management_category</field>		
+        <field name="type">tree</field>
+        <field name="arch" type="xml">
+            <tree string="Task Category">
+                    <field name="name"/>
+                    <field name="count"/>
+            </tree>
+        </field>
+    </record>
+	
+	<!-- Create Page -->
+	<record id="task_category_view_form" model="ir.ui.view">
+		<field name="name">task_category.view_form</field>
+		<field name="model">task_management_category</field>
+		<field name="type">form</field>
+		<field name="arch" type="xml">
+			<form string="Task Category">
+				<sheet>
+					<group>
+						<group name="left">
+							<field name="name"/>
+						</group>
+						<group name="right">
+							<field name="count" readonly="True"/>
+						</group>
+					</group>
+				</sheet>
+			</form>
+		</field>
+	</record>
+</odoo>
