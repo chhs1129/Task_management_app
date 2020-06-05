@@ -12,14 +12,16 @@
 												>
                 <field name="name"/>
 				<field name="due_date" />
-				<field name="priority" />
+				<!--<field name="priority" /> -->
 				<field name="overtime" invisible="True"/>
 				<field name="state" invisible="True" />
-				<!--decoration-success="overtime == False and finished == False" -->
+				<!-- decoration-success="overtime == False and finished == False" -->
 				<!--     decoration-muted="overtime == False and finished" -->
 				
-				<field name="submitted"/>
-				<field name="finished"/>
+				<!-- <field name="submitted"/> -->
+				<!-- <field name="finished"/> -->
+				<field name="assignee_id"/>
+				<field name="assigned_by"/>
 			</tree>
         </field>
     </record>
@@ -33,28 +35,28 @@
 				<sheet> 
 					<header>
 						<field name="state" widget="statusbar" statusbar_visable="'Draft','Assigned,'Finished','Closed''"/>
+						<field name="current_user_group" invisible='True'/>
 						<button name="button_submit" 
 									type="object" 
 									class="oe_highlight"
 									string="Send finish request to Manager" 
-									attrs="{'invisible':['|',('state','=','cancel'),('state','=','done')]}"
-									groups = "task_management_app.task_group_user"
+									attrs="{'invisible':['|',('state','=','cancel'),
+																 '|',('state','=','done'),('current_user_group','!=','user')]}"
 									confirm = "Send the request to the manager?"
 						/>
+						<!--groups = "task_management_app.task_group_user" -->
 						<button name="button_approve" 
 									type="object" 
 									class="oe_highlight"
 									string="Approve this finish request" 
-									states='done'
-									groups = "task_management_app.task_group_manager" 
+									attrs="{'invisible':['|',('state','!=','done'),('current_user_group','=','user')]}"
 									confirm = "Approve this task?"
 						/>
 						<button name="button_reject" 
 									type="object" 
 									class="oe_highlight"
 									string="Reject this request" 
-									states='done'
-									groups = "task_management_app.task_group_manager" 
+									attrs="{'invisible':['|',('state','!=','done'),('current_user_group','=','user')]}"
 									confirm = "Reject this task?"
 						/>			  
 					</header>
@@ -64,19 +66,18 @@
 								<field name="name" /> 
 								<field name="due_date"/>  
 								<field name="assignee_id" widget="one2many_tags" /> 
+								<field name="coordinator_ids" widget="many2many_tags"/>
 							</group>	
 							
 							<group name="group_top_right"> 
 								<field name="priority" />
 								<field name="category_id" />
+								<field name="requirements"/>
+								
 							</group>							
 						</group>
-						<group name="group_bottom"> 
-							<group name="group_bottom_left">
-								<field name="requirements"/>
-							</group>
 							
-						</group>
+							
 					</tree> 
 				</sheet>
 					<div class="oe_chatter"> 
@@ -94,9 +95,12 @@
 		<field name="arch" type="xml"> 
 			<search> 
 				<field name="assignee_id"/>
-				<field name="name"/>
-				<filter name="filter_not_finished" string="Not Finished" domain="[('finished','=',False)]"/> 
-				<filter name="filter_finished" string="Finished" domain="[('finished','=',True)]"/> 
+				<field name="name"/> 
+				<filter name="filter_finished" string="Finished" domain="[('state','=','cancel')]"/> 
+				<filter name="filter_overtime" string="Overtime" domain="[('overtime','=',True)]"/> 
+				<filter name="filter_waiting" string="Waiting for your Approvement" domain="[('state','=','done'),('current_user_group','!=','user')]"/>
+				<filter name="filter_submitted" string="Submitted" domain="[('state','=','done'),('current_user_group','=','user')]" />
+	
 			</search> 
 		</field> 
 	</record>

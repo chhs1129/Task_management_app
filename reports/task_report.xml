@@ -36,7 +36,7 @@
 								<div class="col-2">Due Date</div>
 								<div class="col-2">Overtime?</div>
 								<div class="col-2">Status</div>
-								<div class="col-2">Assignee</div>
+								<div class="col-2">Assigned to</div>
 							</div>
 							<t t-set="finished_task" t-value="0" />
 							<t t-set="overtime_task" t-value="0" />

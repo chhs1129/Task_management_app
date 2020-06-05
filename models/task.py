@@ -17,9 +17,14 @@ class Task(models.Model):
     #Task requirements (for manager)
     requirements = fields.Text('Task Requirements')
     #Task assignee
-    assignee_id = fields.Many2one('res.users', string = 'Assignee', required = True)
+    assignee_id = fields.Many2one('res.users', string = 'Assigned to', required = True)
     #Task category
     category_id = fields.Many2one('task_management_category', string='category')
+    #Task Coordinators
+    coordinator_ids = fields.Many2many('res.users', string = 'coordinators', required = False)
+    #Assiged by whom?
+    assigned_by = fields.Many2one('res.users', string = 'Assigned by', default=lambda self: self.env.user)
+    
     #State
     state = fields.Selection(
         [('new','Draft'),
@@ -28,12 +33,13 @@ class Task(models.Model):
          ('cancel', 'Closed')],
         default='new',
     )
-    #Is Task finished?
-    finished = fields.Boolean('Finished?', default = False) 
+
     #Is Task overtime?
-    overtime = fields.Boolean('Task Overtime?', compute='_check_if_overtime')
-    #Is Task submitted to the manager?
-    submitted = fields.Boolean('Task Submitted?', default = False)
+    overtime = fields.Boolean('Task Overtime?', compute='_check_if_overtime',store=True)
+    #Is current user a coordinator?
+    current_user_group = fields.Char('Current user group',compute='_dynamic_get_group')
+    
+    
     
     
     @api.model
@@ -54,23 +60,50 @@ class Task(models.Model):
                 raise UserError( 'Cannot delete a in progress task.')
 
     @api.multi
+    def is_coordinator(self):
+        self.ensure_one()
+        for rec in self.coordinator_ids:
+            if rec  ==  self.env.user:
+                return True
+            return False
+        
+    @api.multi
     def write(self, values):
-        if self.env['res.users'].has_group('task_management_app.task_group_manager') != True:
-                raise UserError( 'Task must be edited by the manager.')
+        if self.env['res.users'].has_group('task_management_app.task_group_manager') != True and self.is_coordinator() == False:
+                raise UserError( 'Task must be edited by the manager or coordinator.')
         if self.state != 'open' and self.state !='done':
             return super(Task, self).write(values)
         else:
                 raise UserError('You cannot approve the task at this current state.')
     
-    @api.depends('due_date','state')
+    @api.depends('due_date')
     @api.multi
     def _check_if_overtime(self):
         for record in self:
-                record.overtime = record.due_date < fields.Datetime.now()
-       
+            '''
+            if record.coordinator_ids  ==  self.env.user:
+                record.current_user_group = True
+            else:
+                record.current_user_group = False
+            print(record.current_user_group)
+            '''
+            record.overtime = record.due_date < fields.Datetime.now()
+    
+    @api.depends('current_user_group')
+    @api.multi
+    def _dynamic_get_group(self):
+        for record in self:
+            if record.env['res.users'].has_group('task_management_app.task_group_manager') == True:
+                record.current_user_group = 'manager' 
+            else:
+                record.current_user_group = 'user'
+                for rec in record.coordinator_ids:
+                        if record.env.user == rec:
+                            record.current_user_group = 'coordinator'
+
+                
 
     def button_submit(self):
-        super(Task, self).write({'submitted':True})
         super(Task, self).write({'state':'done'})
         '''
         self.submitted = True
@@ -79,8 +112,8 @@ class Task(models.Model):
         
     @api.multi
     def button_approve(self):
-        if self.submitted == True and self.env['res.users'].has_group('task_management_app.task_group_manager') == True:
-            super(Task, self).write({'finished':True})
+        if self.state == 'done' and self.current_user_group != 'user':
+
             super(Task, self).write({'state':'cancel'})
             '''
             self.finished = True
@@ -88,17 +121,15 @@ class Task(models.Model):
             '''
             
     def button_reject(self):
-        if self.submitted == True and self.env['res.users'].has_group('task_management_app.task_group_manager') == True:
-            super(Task, self).write({'submitted':False})
+        if self.state == 'done' and self.current_user_group != 'user':
             super(Task, self).write({'state':'new'})        
             
     @api.multi
     def action_approve(self):
         for record in self:
-            if record.env['res.users'].has_group('task_management_app.task_group_user') == True and record.env['res.users'].has_group('task_management_app.task_group_user')==False:
-                raise UserError('You cannot approve a task.')
-            if record.submitted == True and record.env['res.users'].has_group('task_management_app.task_group_manager') == True:
-                super(Task, record).write({'finished':True})
+            if record.current_user_group == 'user':
+                raise UserError('As a User, you cannot approve a task.')
+            if record.state == 'done' and self.current_user_group != 'user':
                 super(Task, record).write({'state':'cancel'})
     
     
